@@ -1,5 +1,5 @@
 # Battleship 
 
-## A stratrgy game on Dyson Protocol
+## A strategy game on Dyson Protocol
 
 WIP
