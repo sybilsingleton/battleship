@@ -139,3 +139,64 @@ def generate_commits(board: TEXTAREA, salts: str, ships: TEXTAREA):
 
     return board_commits, ship_commits
 
+
+
+def validate_ship_positions(board_size: int, ship_positions: list[list[list[int, int]]], ship_sizes: list[int], seed:int) -> List[List[int]]:
+    # Initialize an empty grid for validation
+    validation_grid = []
+    for _ in '1' * board_size:
+        row = []
+        for _ in '1' * board_size:
+            row.append(0)
+        validation_grid.append(row)
+    
+    ship_size_counter = {size: 0 for size in ship_sizes}
+
+    for ship in ship_positions:
+        ship_length = len(ship)
+        if ship_length not in ship_sizes:
+            raise ValueError(f"Invalid ship length: {ship_length}")
+
+        ship_size_counter[ship_length] += 1
+        if ship_size_counter[ship_length] > ship_sizes.count(ship_length):
+            raise ValueError(f"Too many ships of length {ship_length}")
+
+        x_first, y_first = ship[0]
+        horizontal = True
+        vertical = True
+        contiguous_x = True
+        contiguous_y = True
+        for i, (x, y) in enumerate(ship):
+            # Check orientation
+            if x != x_first:
+                horizontal = False
+            if y != y_first:
+                vertical = False
+            # Check contiguity
+            if horizontal and y != y_first + i:
+                contiguous_y = False
+            if vertical and x != x_first + i:
+                contiguous_x = False
+            # Check within bounds
+            if x < 0 or x >= board_size or y < 0 or y >= board_size:
+                raise ValueError(f"Ship {ship} out of bounds")
+            # Check for overlaps
+            if validation_grid[x][y] != 0:
+                raise ValueError(f"Overlapping ship at coordinates ({x}, {y})")
+            # Mark cell as occupied
+            validation_grid[x][y] = 1
+
+        if not (horizontal and contiguous_y) and not (vertical and contiguous_x):
+            raise ValueError(f"Non-contiguous ship {ship}")
+
+        if not (horizontal or vertical) or (horizontal and vertical):
+            raise ValueError(f"Invalid orientation for ship {ship}")
+
+    # Validate the correct number of ships of each size
+    for size, count in ship_size_counter.items():
+        if count != ship_sizes.count(size):
+            raise ValueError(f"Incorrect number of ships of size {size}")
+
+    return validation_grid
+
+
