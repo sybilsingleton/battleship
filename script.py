@@ -141,7 +141,29 @@ def generate_commits(board: TEXTAREA, salts: str, ships: TEXTAREA):
 
 
 
-def validate_ship_positions(board_size: int, ship_positions: list[list[list[int, int]]], ship_sizes: list[int], seed:int) -> List[List[int]]:
+def validate_ship_positions(board_size: int, ship_positions: list[list[list[int, int]]], ship_sizes: list[int], seed:int) -> List[List[int]]:    
+    """
+    ...: board_size = 10
+    ...: ship_sizes = [5, 4, 3, 3, 2]
+    ...: 
+    ...: ship_positions_valid = [
+    ...:     [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)],
+    ...:     [(1, 0), (1, 1), (1, 2), (1, 3)],
+    ...:     [(2, 0), (2, 1), (2, 2)],
+    ...:     [(3, 0), (3, 1), (3, 2)],
+    ...:     [(4, 0), (4, 1)]
+    ...: ]
+    ...: 
+    ...: # Example usage
+    ...: try:
+    ...:     positions = validate_ship_positions(board_size, ship_positions_valid, ship_sizes,1)
+    ...:     print("Ship positions are valid!")
+    ...:     for p in positions:
+    ...:         print(p)
+    ...: except ValueError as e:
+    ...:     print(f"Validation failed: {e}")
+    ...: 
+    """
     # Initialize an empty grid for validation
     validation_grid = []
     for _ in '1' * board_size:
