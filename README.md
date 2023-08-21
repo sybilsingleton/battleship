@@ -179,3 +179,26 @@ reveal_ships(game_id, player_b_ships)
 game_state = get("games/" + str(game_id))
 print("Winner:", game_state['winner'])
 ```
+Output:
+
+```
+round: 1
+dys1player_a fired at 1, 0
+dys1player_b fired at 0, 0
+dys1player_a was MISSED at 0, 0
+dys1player_b was MISSED at 1, 0
+game_state['state'] fire
+round: 2
+dys1player_a fired at 0, 1
+dys1player_b fired at 1, 0
+dys1player_a was HIT at 1, 0
+dys1player_b was HIT at 0, 1
+game_state['state'] fire
+round: 3
+dys1player_a fired at 0, 0
+dys1player_b fired at 1, 1
+dys1player_a was HIT at 1, 1
+dys1player_b was MISSED at 0, 0
+game_state['state'] reveal_ships
+Winner: dys1player_b
+```
