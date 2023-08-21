@@ -73,7 +73,86 @@ Security Considerations
 -   Access Control: Only the players participating in the game can make moves or modify the game state.
 -   Verification: All moves and reveals are verified to prevent cheating.
 
-Conclusion
-----------
+Example Gameplay
+----------------
 
-Battleship on Dyson Protocol is a secure and transparent adaptation of the classic game using decentralized technology. Using the unique features of Dyson Protocol, the game provides an engaging and fair gaming experience.
+```python
+import random
+#random.seed(1)
+# Player Addresses
+player_a_address = "dys1player_a"
+player_b_address = "dys1player_b"
+
+# Game Initialization
+CALLER = SCRIPT_ADDRESS  # Only the script can create a game
+game_id = create_game(player_a_address, player_b_address, ship_sizes=[2], board_size=2)
+
+# Precommit Phase
+# Player A's Ship Commits
+CALLER = player_a_address
+player_a_ships = [
+    [[1, 0, 54321], [1, 1, 54321]]
+]
+
+a_positions = [player_a_ships[0][0], player_a_ships[0][1], [0,0,""], [0,1,""]]
+random.shuffle(a_positions)
+
+
+player_a_ship_commits = [generate_ship_commit(ship) for ship in player_a_ships]
+set_ship_commits(game_id, player_a_ship_commits)
+
+# Player B's Ship Commits
+CALLER = player_b_address
+player_b_ships = [
+    [[0, 1, 56789], [1, 1, 56789]]
+]
+b_positions = [player_b_ships[0][0], player_b_ships[0][1], [0,0,""], [1,0,""]]
+random.shuffle(b_positions)
+
+player_b_ship_commits = [generate_ship_commit(ship) for ship in player_b_ships]
+set_ship_commits(game_id, player_b_ship_commits)
+
+
+# Simulate the complete game by taking turns firing at each other's ships
+player_a_turn = True
+
+for i in '123456':
+    print(f'round: {i}')
+
+    ax, ay, asalt = a_positions.pop()
+    bx, by, bsalt = b_positions.pop()
+    
+    CALLER = player_a_address
+    fire_at_position(game_id, bx, by)
+
+    CALLER = player_b_address
+    fire_at_position(game_id, ax, ay)
+    
+
+    # Player A reveals
+    CALLER = player_a_address
+    reveal_position(game_id, ax, ay, asalt)
+    
+    # Player B reveals
+    CALLER = player_b_address
+    reveal_position(game_id, bx, by, bsalt)
+
+        
+    # Check if the game is over
+    game_state = get("games/" + str(game_id))
+    print("game_state['state']", game_state['state'])
+    if game_state['state'] != FIRE:
+        break
+
+
+CALLER = player_a_address
+reveal_ships(game_id, player_a_ships)
+
+# Player B reveals their ships
+CALLER = player_b_address
+reveal_ships(game_id, player_b_ships)
+
+# Check the Winner
+game_state = get("games/" + str(game_id))
+print("Winner:",game_state['winner'])
+```
