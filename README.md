@@ -1,4 +1,5 @@
-# Battleship - A strategy game on Dyson Protocol
+Battleship - A strategy game on Dyson Protocol
+==============================================
 
 Overview
 --------
@@ -19,7 +20,7 @@ Gameplay Mechanics
 
 ### Game Creation
 
--   `create_game(player_a_address, player_b_address, board_size, ship_sizes)`: Initializes a new game with two players and optional board size and ship sizes.
+-   `create_game(player_a_address, player_b_address, board_size=10, ship_sizes=[5, 4, 3, 3, 2], max_block_time=100)`: Initializes a new game with two players and optional board size, ship sizes, and maximum block time for each turn.
 
 ### Ship Placement
 
@@ -34,7 +35,7 @@ Gameplay Mechanics
 ### Ending the Game
 
 -   `reveal_ships(game_id, ship_positions)`: Players reveal their ships to validate the game and determine the winner.
--   `_game_over(game_state)`: A private function to handle the end of the game and declare the winner.
+-   `game_over(game_id)`: Handles the end of the game and declares the winner.
 
 ### Retrieving Game Data
 
@@ -65,6 +66,12 @@ Winning Conditions
 -   The winner is the player who hits all the opponent's ships first.
 -   A tie occurs if both players hit all the opponent's ships simultaneously.
 -   A player may forfeit, leading to an automatic win for the opponent.
+-   If both players run out of time, the game ends in a tie.
+
+Timing
+------
+
+Each player has a maximum block time to make their move. If they exceed this time, they forfeit the game.
 
 Security Considerations
 -----------------------
