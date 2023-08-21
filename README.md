@@ -174,10 +174,6 @@ reveal_ships(game_id, player_a_ships)
 CALLER = player_b_address
 reveal_ships(game_id, player_b_ships)
 
-# NEXT BLOCK
-BLOCK_HEIGHT += 1
-
-game_over(game_id)
 
 # Check the Winner
 game_state = get("games/" + str(game_id))
