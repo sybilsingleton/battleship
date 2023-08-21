@@ -76,4 +76,4 @@ Security Considerations
 Conclusion
 ----------
 
-Battle Ships on Dyson Protocol is a secure and transparent adaptation of the classic Battleship game using decentralized technology. Leveraging the features of Dyson Protocol, the game provides an engaging and fair gaming experience.
+Battleship on Dyson Protocol is a secure and transparent adaptation of the classic game using decentralized technology. Using the unique features of Dyson Protocol, the game provides an engaging and fair gaming experience.
