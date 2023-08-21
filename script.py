@@ -1,8 +1,12 @@
 import hashlib
+import random
 import json
 import typing
 
-from dys import _chain, SCRIPT_ADDRESS, CALLER
+from dys import _chain, SCRIPT_ADDRESS, CALLER, BLOCK_INFO
+
+
+BLOCK_HEIGHT = BLOCK_INFO.height
 
 TEXTAREA = typing.Annotated[str, '{"format": "textarea"}']
 
@@ -39,16 +43,19 @@ def _transition_state(game_state, player_index, current_state, new_state):
     assert (
         game_state["state"] == current_state
     ), f"Invalid move: { game_state['state'] } != {current_state}"
-    assert (
-        game_state["round_actions"][player_index] == False
-    ), f"You have already done this action: {current_state}"
-    game_state["round_actions"][player_index] = True
 
-    if all(game_state["round_actions"]):
-        game_state["round_actions"] = [False, False]
+    assert (
+        game_state["round_start_timer"][player_index] is not None
+    ), f"You have already done this action: {current_state}"
+
+    delta = BLOCK_HEIGHT - game_state["round_start_timer"][player_index]
+    game_state["game_time"][player_index] += delta
+
+    game_state["round_start_timer"][player_index] = None
+
+    if not any(game_state["round_start_timer"]):
+        game_state["round_start_timer"] = [BLOCK_HEIGHT, BLOCK_HEIGHT]
         game_state["state"] = new_state
-        return True  # Indicate that both players have taken an action
-    return False
 
 
 def create_game(
@@ -56,6 +63,7 @@ def create_game(
     player_b_address: str,
     board_size: int = 10,
     ship_sizes: list[int] = [5, 4, 3, 3, 2],
+    max_block_time: int = 100,
 ):
     assert 2 <= board_size <= 10, "Board size must be between 2 and 10"
     if isinstance(ship_sizes, str):
@@ -68,8 +76,10 @@ def create_game(
     game_id = get("game_counter") or 0
     game_id += 1
     game_state = {
+        "game_id": game_id,
         "players": [player_a_address, player_b_address],
         "state": PRECOMMIT,
+        "max_block_time": max_block_time,
         "board_size": board_size,
         "ship_sizes": ship_sizes,
         # sha256 hash of ships
@@ -82,10 +92,11 @@ def create_game(
         "guessed_positions": [[], []],  # positions guessed by each player
         "hit_counter": [0, 0],  # player 0 or 1
         "forfeited_players": [],  # player indices who forfeited
-        "round_actions": [
-            False,
-            False,
+        "round_start_timer": [
+            BLOCK_HEIGHT,
+            BLOCK_HEIGHT,
         ],  # Track if a player has taken an action this round
+        "game_time": [max_block_time, max_block_time],
     }
     _set("games/" + str(game_id), game_state)
     _set("game_counter", game_id)
@@ -97,11 +108,7 @@ def set_ship_commits(game_id: int, ship_commits: list[str]):
     assert game_state, "Game does not exist"
     player_index = game_state["players"].index(CALLER)
     _transition_state(game_state, player_index, PRECOMMIT, FIRE)
-
     game_state["ship_precommits"][player_index] = ship_commits
-
-    # Check if both players have committed their ships
-
     _set("games/" + str(game_id), game_state)
 
 
@@ -242,27 +249,34 @@ def reveal_ships(game_id: int, ship_positions: list[list[COORD]]):
     if commit_diff:
         raise ValueError(f"Incorrect commits: {commit_diff}")
 
-    if game_state["state"] == OVER:
-        _game_over(game_state)
-
     _set("games/" + str(game_id), game_state)
 
 
-def _game_over(game_state):
-    forfeited_players = game_state["forfeited_players"]
-    if len(forfeited_players) == 2:
-        # Both players forfeited
-        game_state["winner"] = "both_forfeited"
-    elif len(forfeited_players) == 1:
-        # One player forfeited
-        game_state["winner"] = game_state["players"][1 - forfeited_players[0]]
+def game_over(game_id):
+    game_state = get("games/" + str(game_id))
+    assert game_state, "Game does not exist"
+
+    # if either player is out of time, set game state state to OVER
+    forfeit = []
+    for player_index in [0, 1]:
+        delta = game_state["round_start_timer"][player_index] - BLOCK_HEIGHT
+        game_state["game_time"][player_index] += delta
+        game_state["round_start_timer"][player_index] = None
+        if game_state["game_time"][player_index] <= 0:
+            game_state["state"] = OVER
+            forfeit.append(player_index)
+
+    assert game_state["state"] == OVER, "Game is not over"
+
+    if len(forfeit) == 2:
+        game_state["winner"] = "tie"
+    elif len(forfeit) == 1:
+        game_state["winner"] = game_state["players"][1 - forfeit[0]]
+    elif game_state["hit_counter"][0] == game_state["hit_counter"][1]:
+        game_state["winner"] = "tie"  # Indicate a tie
     else:
-        # No forfeits, determine the winner based on hits
-        if game_state["hit_counter"][0] == game_state["hit_counter"][1]:
-            game_state["winner"] = "tie"  # Indicate a tie
-        else:
-            winner_index = game_state["hit_counter"].index(
-                max(game_state["hit_counter"])
-            )
-            game_state["winner"] = game_state["players"][winner_index]
+        winner_index = game_state["hit_counter"].index(max(game_state["hit_counter"]))
+        game_state["winner"] = game_state["players"][winner_index]
+
+    _set("games/" + str(game_id), game_state)
 
