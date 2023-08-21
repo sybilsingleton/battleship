@@ -251,6 +251,9 @@ def reveal_ships(game_id: int, ship_positions: list[list[COORD]]):
 
     _set("games/" + str(game_id), game_state)
 
+    if game_state["state"] == OVER:
+        game_over(game_id)
+
 
 def game_over(game_id):
     game_state = get("games/" + str(game_id))
