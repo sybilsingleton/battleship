@@ -92,7 +92,12 @@ player_b_address = "dys1player_b"
 
 # Game Initialization
 CALLER = SCRIPT_ADDRESS  # Only the script can create a game
-game_id = create_game(player_a_address, player_b_address, ship_sizes=[2], board_size=2)
+game_id = create_game(
+    player_a_address,
+    player_b_address,
+    ship_sizes=[2],
+    board_size=2,
+    max_block_time=100)
 
 # Precommit Phase
 # Player A's Ship Commits
@@ -104,9 +109,11 @@ player_a_ships = [
 a_positions = [player_a_ships[0][0], player_a_ships[0][1], [0,0,""], [0,1,""]]
 random.shuffle(a_positions)
 
-
 player_a_ship_commits = [generate_ship_commit(ship) for ship in player_a_ships]
 set_ship_commits(game_id, player_a_ship_commits)
+
+# NEXT BLOCK
+BLOCK_HEIGHT += 1
 
 # Player B's Ship Commits
 CALLER = player_b_address
@@ -119,12 +126,18 @@ random.shuffle(b_positions)
 player_b_ship_commits = [generate_ship_commit(ship) for ship in player_b_ships]
 set_ship_commits(game_id, player_b_ship_commits)
 
+# NEXT BLOCK
+BLOCK_HEIGHT += 1
+
 
 # Simulate the complete game by taking turns firing at each other's ships
 player_a_turn = True
 
 for i in '123456':
     print(f'round: {i}')
+    
+    # NEXT BLOCK
+    BLOCK_HEIGHT += 1
 
     ax, ay, asalt = a_positions.pop()
     bx, by, bsalt = b_positions.pop()
@@ -151,6 +164,8 @@ for i in '123456':
     if game_state['state'] != FIRE:
         break
 
+# NEXT BLOCK
+BLOCK_HEIGHT += 1
 
 CALLER = player_a_address
 reveal_ships(game_id, player_a_ships)
@@ -159,7 +174,12 @@ reveal_ships(game_id, player_a_ships)
 CALLER = player_b_address
 reveal_ships(game_id, player_b_ships)
 
+# NEXT BLOCK
+BLOCK_HEIGHT += 1
+
+game_over(game_id)
+
 # Check the Winner
 game_state = get("games/" + str(game_id))
-print("Winner:",game_state['winner'])
+print("Winner:", game_state['winner'])
 ```
