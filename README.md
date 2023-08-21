@@ -103,7 +103,7 @@ game_id = create_game(
 # Player A's Ship Commits
 CALLER = player_a_address
 player_a_ships = [
-    [[1, 0, 54321], [1, 1, 54321]]
+    [[1, 0, 542346127787], [1, 1, 21454334165]]
 ]
 
 a_positions = [player_a_ships[0][0], player_a_ships[0][1], [0,0,""], [0,1,""]]
@@ -118,7 +118,7 @@ BLOCK_HEIGHT += 1
 # Player B's Ship Commits
 CALLER = player_b_address
 player_b_ships = [
-    [[0, 1, 56789], [1, 1, 56789]]
+    [[0, 1, 45647672232987], [1, 1, 24351676243134]]
 ]
 b_positions = [player_b_ships[0][0], player_b_ships[0][1], [0,0,""], [1,0,""]]
 random.shuffle(b_positions)
